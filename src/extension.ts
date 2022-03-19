@@ -52,6 +52,9 @@ async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRu
 			textEditor.selections = [new vscode.Selection(lineIdx, 0, lineIdx, 0)];
 			await timeout(delayBetweenCommands);
 			await vscode.commands.executeCommand("editor.fold");
+			if (rule.firstMatchOnly) {
+				break;
+			}
 		}
 	}
 

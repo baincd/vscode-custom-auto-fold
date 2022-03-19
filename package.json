@@ -42,6 +42,11 @@
 									 "examples": [
 										 "**/*.java"
 									 ]
+								 },
+								 "firstMatchOnly": {
+									 "type": "boolean",
+									 "description": "Only fold the first match (if false, every line that matches will be folded).",
+									 "default": false
 								 }
 							 },
 							 "required": [
