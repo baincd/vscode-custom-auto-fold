@@ -11,14 +11,14 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:custom-auto-fold.helloWorld"
+		"onStartupFinished"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "custom-auto-fold.helloWorld",
-				"title": "Hello World"
+				"command": "custom-auto-fold.autoFold",
+				"title": "Run Auto Fold"
 			}
 		]
 	},
