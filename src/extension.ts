@@ -14,9 +14,15 @@ export function deactivate() {}
 async function autoFold(textEditor: vscode.TextEditor) {
 	const origSelections = textEditor.selections;
 
-	textEditor.selections = [new vscode.Selection(2,0,2,0)];
-	await timeout(10);
-	await vscode.commands.executeCommand("editor.fold");
+	const foldPattern = new RegExp("^import ")
+	const maxLineIdx = textEditor.document.lineCount - 1;
+	for (var lineIdx = 0; lineIdx <= maxLineIdx; lineIdx++) {
+		if (foldPattern.test(textEditor.document.lineAt(lineIdx).text)) {
+			textEditor.selections = [new vscode.Selection(lineIdx,0,lineIdx,0)];
+			await timeout(10);
+			await vscode.commands.executeCommand("editor.fold");
+		}
+	}
 
 	textEditor.selections = origSelections;
 }
