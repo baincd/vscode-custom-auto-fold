@@ -44,6 +44,7 @@ async function autoFold(textEditor: vscode.TextEditor) {
 
 async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRule, delayBetweenCommands: number) {
 	const origSelections = textEditor.selections;
+	const origVisibleRanges = textEditor.visibleRanges;
 
 	const foldPattern = new RegExp(rule.linePattern);
 	const maxLineIdx = textEditor.document.lineCount - 1;
@@ -59,6 +60,7 @@ async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRu
 	}
 
 	textEditor.selections = origSelections;
+	textEditor.revealRange(origVisibleRanges[0],vscode.TextEditorRevealType.AtTop);
 }
 
 async function timeout(ms: number): Promise<void> {
