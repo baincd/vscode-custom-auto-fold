@@ -4,11 +4,12 @@ import {AutoFoldRule, AutoFoldConfig} from './types'
 
 export function activate(context: vscode.ExtensionContext) {
 	
-	let disposable = vscode.commands.registerTextEditorCommand('custom-auto-fold.autoFold', (textEditor) => {
-		autoFold(textEditor);
-	});
+	context.subscriptions.push(
+		vscode.commands.registerTextEditorCommand('custom-auto-fold.autoFold', (textEditor) => {
+			autoFold(textEditor);
+		})
+	);
 
-	context.subscriptions.push(disposable);
 }
 
 export function deactivate() {} 
