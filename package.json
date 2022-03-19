@@ -20,6 +20,48 @@
 				"command": "custom-auto-fold.autoFold",
 				"title": "Run Auto Fold"
 			}
+		],
+		"configuration": [
+			{
+				"properties": {
+					"custom-auto-fold.rules": {
+						 "type": "array",
+						 "items": {
+							 "type": "object",
+							 "properties": {
+								 "linePattern": {
+									"type": "string",
+									"description": "Regex pattern for line to fold (can match any line within folding region)",
+									"examples": [
+										"^import\\s"
+									]
+								 },
+								 "fileGlob": {
+									 "type": "string",
+									 "description": "Only run this auto fold on files that match this file glob",
+									 "examples": [
+										 "**/*.java"
+									 ]
+								 }
+							 },
+							 "required": [
+								 "linePattern"
+							 ],
+							 "examples": [
+								 {
+									 "linePattern": "^import\\s",
+									 "fileGlob":  "**/*.java"
+								 }
+							 ]
+						 }
+					},
+					"custom-auto-fold.betweenCommandsDelay": {
+						"type": "integer",
+						"description": "ms delay between commands.  Increasing this may solve issues if your vscode experiences lag.",
+						"default": 10
+					}
+				}
+			}
 		]
 	},
 	"scripts": {

@@ -1,6 +1,6 @@
 import * as minimatch from 'minimatch'
-
 import * as vscode from 'vscode';
+import {AutoFoldRule, AutoFoldConfig} from './types'
 
 export function activate(context: vscode.ExtensionContext) {
 	
@@ -14,18 +14,27 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {} 
 
 async function autoFold(textEditor: vscode.TextEditor) {
-	if (!minimatch(textEditor.document.fileName, "**/*.java")) {
+	const autoFoldConfig = vscode.workspace.getConfiguration().get("custom-auto-fold") as AutoFoldConfig;
+	if (!autoFoldConfig.rules) {
 		return;
 	}
+	for (var i = 0; i < autoFoldConfig.rules?.length; i++) {
+		const rule = autoFoldConfig.rules[i]
+		if (fileNameMatchesGlob(textEditor.document.fileName, rule.fileGlob)) {
+			await applyAutoFoldRule(textEditor, rule, autoFoldConfig.betweenCommandsDelay);
+		}
+	}
+}
 
+async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRule, delayBetweenCommands: number) {
 	const origSelections = textEditor.selections;
 
-	const foldPattern = new RegExp("^import ")
+	const foldPattern = new RegExp(rule.linePattern);
 	const maxLineIdx = textEditor.document.lineCount - 1;
 	for (var lineIdx = 0; lineIdx <= maxLineIdx; lineIdx++) {
 		if (foldPattern.test(textEditor.document.lineAt(lineIdx).text)) {
-			textEditor.selections = [new vscode.Selection(lineIdx,0,lineIdx,0)];
-			await timeout(10);
+			textEditor.selections = [new vscode.Selection(lineIdx, 0, lineIdx, 0)];
+			await timeout(delayBetweenCommands);
 			await vscode.commands.executeCommand("editor.fold");
 		}
 	}
@@ -35,6 +44,14 @@ async function autoFold(textEditor: vscode.TextEditor) {
 
 async function timeout(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function fileNameMatchesGlob(fileName: string, globStr?: string): boolean {
+	if (!globStr || minimatch(fileName, globStr)) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 
