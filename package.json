@@ -1,7 +1,8 @@
 {
-  "name": "custom-auto-fold",
+	"name": "custom-auto-fold",
 	"displayName": "Custom Auto Fold",
 	"description": "Automatically fold specific sections of files when opened",
+	"publisher": "baincd",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.65.0"
