@@ -55,6 +55,11 @@
 							 ]
 						 }
 					},
+					"custom-auto-fold.delay": {
+						"type": "integer",
+						"description": "ms delay before starting auto fold.  Auto fold must start after the folding ranges have been defined on the document.  Increase or decrease this delay based on your vscode performance.",
+						"default": 250
+					},
 					"custom-auto-fold.betweenCommandsDelay": {
 						"type": "integer",
 						"description": "ms delay between commands.  Increasing this may solve issues if your vscode experiences lag.",

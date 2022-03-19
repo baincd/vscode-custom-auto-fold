@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {} 
 
 async function textDocumentOpened(textDocument: vscode.TextDocument) {
-	await timeout(250);
+	await timeout(vscode.workspace.getConfiguration().get("custom-auto-fold.delay") as number);
 	if (vscode.window.activeTextEditor?.document != textDocument) {
 		console.log("auto-fold: activeTextEditor != TextDocument that was opened - aborting auto fold");
 		return;

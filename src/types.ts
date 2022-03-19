@@ -1,5 +1,6 @@
 export interface AutoFoldConfig {
     rules?: AutoFoldRule[],
+    delay: number,
     betweenCommandsDelay: number
 }
 
