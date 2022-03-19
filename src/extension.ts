@@ -10,9 +10,24 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+		vscode.workspace.onDidOpenTextDocument(textDocument => {
+			textDocumentOpened(textDocument);
+		})
+	);
+
 }
 
 export function deactivate() {} 
+
+async function textDocumentOpened(textDocument: vscode.TextDocument) {
+	await timeout(250);
+	if (vscode.window.activeTextEditor?.document != textDocument) {
+		console.log("auto-fold: activeTextEditor != TextDocument that was opened - aborting auto fold");
+		return;
+	}
+	await autoFold(vscode.window.activeTextEditor);
+}
 
 async function autoFold(textEditor: vscode.TextEditor) {
 	const autoFoldConfig = vscode.workspace.getConfiguration().get("custom-auto-fold") as AutoFoldConfig;
