@@ -1,70 +1,39 @@
-# custom-auto-fold README
+# Custom Auto Fold
 
-This is the README for your extension "custom-auto-fold". After writing up a brief description, we recommend including the following sections.
+Automatically fold specific sections when files are opened.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+When opening a file, automatically fold sections of the file that match the configured regex.
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Auto fold rules can also be run on an already opened file with the command `Run Auto Fold`
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+```jsonc
+    "custom-auto-fold.rules": [
+        {
+            "fileGlob": "**/*.java", // Only auto fold files that match this file glob
+            "linePattern": "^import\\s", // Regex pattern for line to fold (can match any line within folding section)
+            "firstMatchOnly": true // Only fold the first matching line
+        },
+        // Can create multiple auto-fold rules
+    ],
+    "custom-auto-fold.betweenCommandsDelay": 10, // ms delay between commands
+    "custom-auto-fold.delay": 250, // ms delay before starting auto fold when files are opened
+```
 
-For example:
+Note that there are no default rules - you must configure `custom-auto-fold.rules` for this extension to do anything interesting.
 
-This extension contributes the following settings:
+[Click here](./Examples.md) to see some example rule configurations.
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+## How It Works
+
+For files that match the `fileGlob` pattern, each line is tested against the `linePattern` regex pattern.  For each line (or the first line if `firstMatchOnly` is true) that matches the pattern, the cursor is moved to the line and the "Fold" command is run.
+
+Once all the rules have been run, the cursor/selections and vertical scrolling are reset to what they were before.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+This extension depends on VS Code or other extensions to define folding regions in the editor before running.  You may want to adjust the `custom-auto-fold.delay` setting based on your VS Code performance for an optimal experience.
 
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**

@@ -1,7 +1,7 @@
 {
 	"name": "custom-auto-fold",
 	"displayName": "Custom Auto Fold",
-	"description": "Automatically fold specific sections of files when opened",
+	"description": "Automatically fold specific sections when files are opened",
 	"publisher": "baincd",
 	"version": "0.0.1",
 	"engines": {
@@ -31,21 +31,21 @@
 							 "properties": {
 								 "linePattern": {
 									"type": "string",
-									"description": "Regex pattern for line to fold (can match any line within folding region)",
+									"description": "Regex pattern for line to fold (can match any line within folding section)",
 									"examples": [
 										"^import\\s"
 									]
 								 },
 								 "fileGlob": {
 									 "type": "string",
-									 "description": "Only run this auto fold on files that match this file glob",
+									 "description": "Only auto fold files that match this file glob (for glob examples see https://github.com/motemen/minimatch-cheat-sheet)",
 									 "examples": [
 										 "**/*.java"
 									 ]
 								 },
 								 "firstMatchOnly": {
 									 "type": "boolean",
-									 "description": "Only fold the first match (if false, every line that matches will be folded).",
+									 "description": "Only fold the first matching line (if false, every line that matches will be folded)",
 									 "default": false
 								 }
 							 },
@@ -62,7 +62,7 @@
 					},
 					"custom-auto-fold.delay": {
 						"type": "integer",
-						"description": "ms delay before starting auto fold.  Auto fold must start after the folding ranges have been defined on the document.  Increase or decrease this delay based on your vscode performance.",
+						"description": "ms delay before starting auto fold when files are opened.  Auto fold must start after the folding ranges have been defined on the document.  Increase or decrease this delay based on your vscode performance.",
 						"default": 250
 					},
 					"custom-auto-fold.betweenCommandsDelay": {
