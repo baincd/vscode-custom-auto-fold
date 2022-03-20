@@ -34,22 +34,32 @@ async function autoFold(textEditor: vscode.TextEditor) {
 	if (!autoFoldConfig.rules) {
 		return;
 	}
+
+	let didFold = false;
+	const origSelections = textEditor.selections;
+	const origVisibleRanges = textEditor.visibleRanges;
+
 	for (var i = 0; i < autoFoldConfig.rules?.length; i++) {
 		const rule = autoFoldConfig.rules[i]
 		if (fileNameMatchesGlob(textEditor.document.fileName, rule.fileGlob)) {
-			await applyAutoFoldRule(textEditor, rule, autoFoldConfig.betweenCommandsDelay);
+			didFold = await applyAutoFoldRule(textEditor, rule, autoFoldConfig.betweenCommandsDelay) || didFold;
 		}
+	}
+
+	if (didFold) {
+		textEditor.selections = origSelections;
+		textEditor.revealRange(origVisibleRanges[0],vscode.TextEditorRevealType.AtTop);
 	}
 }
 
-async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRule, delayBetweenCommands: number) {
-	const origSelections = textEditor.selections;
-	const origVisibleRanges = textEditor.visibleRanges;
+async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRule, delayBetweenCommands: number): Promise<boolean> {
+	let didFold = false;
 
 	const foldPattern = new RegExp(rule.linePattern);
 	const maxLineIdx = textEditor.document.lineCount - 1;
 	for (var lineIdx = 0; lineIdx <= maxLineIdx; lineIdx++) {
 		if (foldPattern.test(textEditor.document.lineAt(lineIdx).text)) {
+			didFold = true;
 			textEditor.selections = [new vscode.Selection(lineIdx, 0, lineIdx, 0)];
 			await timeout(delayBetweenCommands);
 			await vscode.commands.executeCommand("editor.fold");
@@ -59,8 +69,7 @@ async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRu
 		}
 	}
 
-	textEditor.selections = origSelections;
-	textEditor.revealRange(origVisibleRanges[0],vscode.TextEditorRevealType.AtTop);
+	return didFold;
 }
 
 async function timeout(ms: number): Promise<void> {
