@@ -12,4 +12,5 @@ webpack.config.js
 **/.eslintrc.json
 **/*.map
 **/*.ts
+package-vsix.sh
 *.gitignored.*
