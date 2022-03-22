@@ -60,9 +60,9 @@ async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRu
 	for (var lineIdx = 0; lineIdx <= maxLineIdx; lineIdx++) {
 		if (foldPattern.test(textEditor.document.lineAt(lineIdx).text)) {
 			didFold = true;
-			textEditor.selections = [new vscode.Selection(lineIdx, 0, lineIdx, 0)];
-			await timeout(delayBetweenCommands);
-			await vscode.commands.executeCommand("editor.fold");
+			const origSelectionLineIdx = textEditor.selection.start.line;
+			await fold(textEditor, lineIdx, delayBetweenCommands);
+			await navigateBackToLineBeforeFolding(textEditor, origSelectionLineIdx);
 			if (rule.firstMatchOnly) {
 				break;
 			}
@@ -70,6 +70,23 @@ async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRu
 	}
 
 	return didFold;
+}
+
+async function navigateBackToLineBeforeFolding(textEditor: vscode.TextEditor, origSelectionLineIdx: number) {
+	// There shouldn't be a need to every have to navigateBack more than twice.
+	// Therefore, run no more than 2 times to avoid vscode going haywire if this assumption turns out to be incorrect.
+	if (textEditor.selection.start.line != origSelectionLineIdx) {
+		await vscode.commands.executeCommand("workbench.action.navigateBack");
+	}
+	if (textEditor.selection.start.line != origSelectionLineIdx) {
+		await vscode.commands.executeCommand("workbench.action.navigateBack");
+	}
+}
+
+async function fold(textEditor: vscode.TextEditor, lineIdx: number, delayBetweenCommands: number) {
+	textEditor.selections = [new vscode.Selection(lineIdx, 0, lineIdx, 0)];
+	await timeout(delayBetweenCommands);
+	await vscode.commands.executeCommand("editor.fold");
 }
 
 async function timeout(ms: number): Promise<void> {
