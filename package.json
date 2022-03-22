@@ -58,11 +58,21 @@
 							 ],
 							 "examples": [
 								 {
+									 "fileGlob":  "**/*.java",
 									 "linePattern": "^import\\s",
-									 "fileGlob":  "**/*.java"
+									 "firstMatchOnly": true
 								 }
 							 ]
-						 }
+						 },
+						 "examples": [
+							 [
+								{
+									"fileGlob":  "**/*.java",
+									"linePattern": "^import\\s",
+									"firstMatchOnly": true
+								}
+							 ]
+						 ]
 					},
 					"custom-auto-fold.delay": {
 						"type": "integer",
