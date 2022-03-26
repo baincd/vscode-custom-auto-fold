@@ -65,15 +65,19 @@ class AutoFoldCommand {
 	
 		const foldPattern = new RegExp(rule.linePattern);
 		const maxLineIdx = this.textEditor.document.lineCount - 1;
-		for (var lineIdx = 0; lineIdx <= maxLineIdx; lineIdx++) {
+		for (var lineIdx = 0; lineIdx <= maxLineIdx; ) {
 			if (foldPattern.test(this.textEditor.document.lineAt(lineIdx).text)) {
 				didFold = true;
 				const origSelectionLineIdx = this.textEditor.selection.start.line;
-				await this.fold(lineIdx);
-				await this.resetNavigationHistory(origSelectionLineIdx, lineIdx, this.textEditor.selection.start.line);
+				let foldedRange = await this.fold(lineIdx);
+				await this.resetNavigationHistory(origSelectionLineIdx, lineIdx, foldedRange.start.line);
 				if (rule.firstMatchOnly) {
 					break;
+				} else {
+					lineIdx = foldedRange.end.line + 1;
 				}
+			} else {
+				lineIdx++;
 			}
 		}
 	
@@ -98,9 +102,20 @@ class AutoFoldCommand {
 		}
 	}
 
-	private async fold(lineIdx: number) {
+	private async fold(lineIdx: number): Promise<vscode.Range> {
 		await this.gotoLine(lineIdx);
 		await vscode.commands.executeCommand("editor.fold");
+
+		let foldRangeStartIdx = this.textEditor.selection.start.line;
+		let nextVisRangeStartIdx = this.textEditor.document.lineCount;
+		for (let i = 0; i < this.textEditor.visibleRanges.length; i++) {
+			let visRangeStartIdx = this.textEditor.visibleRanges[i].start.line;
+			if (foldRangeStartIdx < visRangeStartIdx && visRangeStartIdx < nextVisRangeStartIdx) {
+				nextVisRangeStartIdx = visRangeStartIdx;
+			}
+		}
+
+		return new vscode.Range(foldRangeStartIdx,0,nextVisRangeStartIdx-1,0);
 	}
 
 	private async gotoLine(lineIdx: number) {
