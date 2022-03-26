@@ -4,6 +4,10 @@ All notable changes to the "custom-auto-fold" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.3] - 2021-03-26
+### Fixed
+- Fix navigation history
+
 ## [1.0.2] - 2021-03-21
 ### Fixed
 - Corrected Changelog
