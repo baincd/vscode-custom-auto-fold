@@ -6,7 +6,7 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	context.subscriptions.push(
 		vscode.commands.registerTextEditorCommand('custom-auto-fold.autoFold', (textEditor) => {
-			autoFold(textEditor);
+			new AutoFoldCommand(textEditor).autoFold();
 		})
 	);
 
@@ -26,76 +26,89 @@ async function textDocumentOpened(textDocument: vscode.TextDocument) {
 		// console.log("auto-fold: activeTextEditor != TextDocument that was opened - aborting auto fold");
 		return;
 	}
-	await autoFold(vscode.window.activeTextEditor);
+	await new AutoFoldCommand(vscode.window.activeTextEditor).autoFold();
 }
 
-async function autoFold(textEditor: vscode.TextEditor) {
-	const autoFoldConfig = vscode.workspace.getConfiguration().get("custom-auto-fold") as AutoFoldConfig;
-	if (!autoFoldConfig.rules) {
-		return;
+class AutoFoldCommand {
+	private readonly textEditor: vscode.TextEditor;
+	private readonly config: AutoFoldConfig;
+
+	constructor(aTextEditor: vscode.TextEditor) {
+		this.textEditor = aTextEditor;
+		this.config = vscode.workspace.getConfiguration().get("custom-auto-fold") as AutoFoldConfig;
 	}
 
-	let didFold = false;
-	const origSelections = textEditor.selections;
-	const origVisibleRanges = textEditor.visibleRanges;
-
-	for (var i = 0; i < autoFoldConfig.rules?.length; i++) {
-		const rule = autoFoldConfig.rules[i]
-		if (fileNameMatchesGlob(textEditor.document.fileName, rule.fileGlob)) {
-			didFold = await applyAutoFoldRule(textEditor, rule, autoFoldConfig.betweenCommandsDelay) || didFold;
+	public async autoFold() {
+		if (!this.config.rules) {
+			return;
 		}
-	}
-
-	if (didFold) {
-		textEditor.selections = origSelections;
-		textEditor.revealRange(origVisibleRanges[0],vscode.TextEditorRevealType.AtTop);
-	}
-}
-
-async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRule, delayBetweenCommands: number): Promise<boolean> {
-	let didFold = false;
-
-	const foldPattern = new RegExp(rule.linePattern);
-	const maxLineIdx = textEditor.document.lineCount - 1;
-	for (var lineIdx = 0; lineIdx <= maxLineIdx; lineIdx++) {
-		if (foldPattern.test(textEditor.document.lineAt(lineIdx).text)) {
-			didFold = true;
-			const origSelectionLineIdx = textEditor.selection.start.line;
-			await fold(textEditor, lineIdx, delayBetweenCommands);
-			await resetNavigationHistory(textEditor, origSelectionLineIdx, lineIdx, textEditor.selection.start.line, delayBetweenCommands);
-			if (rule.firstMatchOnly) {
-				break;
+	
+		let didFold = false;
+		const origSelections = this.textEditor.selections;
+		const origVisibleRanges = this.textEditor.visibleRanges;
+	
+		for (var i = 0; i < this.config.rules?.length; i++) {
+			const rule = this.config.rules[i]
+			if (fileNameMatchesGlob(this.textEditor.document.fileName, rule.fileGlob)) {
+				didFold = await this.applyAutoFoldRule(rule) || didFold;
 			}
 		}
+	
+		if (didFold) {
+			this.textEditor.selections = origSelections;
+			this.textEditor.revealRange(origVisibleRanges[0],vscode.TextEditorRevealType.AtTop);
+		}
 	}
 
-	return didFold;
+	private async applyAutoFoldRule(rule: AutoFoldRule): Promise<boolean> {
+		let didFold = false;
+	
+		const foldPattern = new RegExp(rule.linePattern);
+		const maxLineIdx = this.textEditor.document.lineCount - 1;
+		for (var lineIdx = 0; lineIdx <= maxLineIdx; lineIdx++) {
+			if (foldPattern.test(this.textEditor.document.lineAt(lineIdx).text)) {
+				didFold = true;
+				const origSelectionLineIdx = this.textEditor.selection.start.line;
+				await this.fold(lineIdx);
+				await this.resetNavigationHistory(origSelectionLineIdx, lineIdx, this.textEditor.selection.start.line);
+				if (rule.firstMatchOnly) {
+					break;
+				}
+			}
+		}
+	
+		return didFold;
+	}
+
+	private async resetNavigationHistory(origLineIdx: number, foldLineIdx: number, lineIdxAfterFold: number) {
+		await this.navigateBack(lineIdxAfterFold, foldLineIdx);
+		await this.navigateBack(foldLineIdx, origLineIdx);
+	}
+
+	/** Navigate backwards, removing cursor moved from navigation history (technically the moves may still be in the forward history, but thats ok...) */
+	private async navigateBack(fromLineIdx: number, toLineIdx: number) {
+		// There must be at least 10 lines of difference for a cursor move to be added to the navigation history.  Refs:
+		//     https://github.com/microsoft/vscode/issues/34763
+		//     https://github.com/microsoft/vscode/issues/89699#issuecomment-581808250
+		// Use "Go Back" command to navigate back in history, so when the user does "Go Back" it does not cycle through these moves
+		if (Math.abs(fromLineIdx - toLineIdx) >= 10) {
+			await vscode.commands.executeCommand("workbench.action.navigateBack");
+		} else {
+			await this.gotoLine(toLineIdx);
+		}
+	}
+
+	private async fold(lineIdx: number) {
+		await this.gotoLine(lineIdx);
+		await vscode.commands.executeCommand("editor.fold");
+	}
+
+	private async gotoLine(lineIdx: number) {
+		this.textEditor.selections = [new vscode.Selection(lineIdx, 0, lineIdx, 0)];
+		await timeout(this.config.betweenCommandsDelay);
+	}
 }
 
-async function resetNavigationHistory(textEditor: vscode.TextEditor, origLineIdx: number, foldLineIdx: number, lineIdxAfterFold: number, delayBetweenCommands: number) {
-	// There must be at least 10 lines of difference for a cursor move to be added to the navigation history.  Refs:
-	//     https://github.com/microsoft/vscode/issues/34763
-	//     https://github.com/microsoft/vscode/issues/89699#issuecomment-581808250
-	// Use "Go Back" command to navigate back in history, so when the user does "Go Back" it does not cycle through these moves
-	if (foldLineIdx - lineIdxAfterFold >= 10) {
-		await vscode.commands.executeCommand("workbench.action.navigateBack");
-	} else {
-		textEditor.selections = [new vscode.Selection(foldLineIdx, 0, foldLineIdx, 0)];
-		await timeout(delayBetweenCommands);
-	}
-	if (Math.abs(foldLineIdx - origLineIdx) >= 10) {
-		await vscode.commands.executeCommand("workbench.action.navigateBack");
-	} else {
-		textEditor.selections = [new vscode.Selection(origLineIdx, 0, origLineIdx, 0)];
-		await timeout(delayBetweenCommands);
-	}
-}
-
-async function fold(textEditor: vscode.TextEditor, lineIdx: number, delayBetweenCommands: number) {
-	textEditor.selections = [new vscode.Selection(lineIdx, 0, lineIdx, 0)];
-	await timeout(delayBetweenCommands);
-	await vscode.commands.executeCommand("editor.fold");
-}
 
 async function timeout(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
