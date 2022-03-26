@@ -62,7 +62,7 @@ async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRu
 			didFold = true;
 			const origSelectionLineIdx = textEditor.selection.start.line;
 			await fold(textEditor, lineIdx, delayBetweenCommands);
-			await resetNavigationHistory(origSelectionLineIdx, lineIdx, textEditor.selection.start.line);
+			await resetNavigationHistory(textEditor, origSelectionLineIdx, lineIdx, textEditor.selection.start.line, delayBetweenCommands);
 			if (rule.firstMatchOnly) {
 				break;
 			}
@@ -72,16 +72,22 @@ async function applyAutoFoldRule(textEditor: vscode.TextEditor, rule: AutoFoldRu
 	return didFold;
 }
 
-async function resetNavigationHistory(origLineIdx: number, foldLineIdx: number, lineIdxAfterFold: number) {
+async function resetNavigationHistory(textEditor: vscode.TextEditor, origLineIdx: number, foldLineIdx: number, lineIdxAfterFold: number, delayBetweenCommands: number) {
 	// There must be at least 10 lines of difference for a cursor move to be added to the navigation history.  Refs:
 	//     https://github.com/microsoft/vscode/issues/34763
 	//     https://github.com/microsoft/vscode/issues/89699#issuecomment-581808250
 	// Use "Go Back" command to navigate back in history, so when the user does "Go Back" it does not cycle through these moves
-	if (Math.abs(foldLineIdx - origLineIdx) >= 10) {
-		await vscode.commands.executeCommand("workbench.action.navigateBack");
-	}
 	if (foldLineIdx - lineIdxAfterFold >= 10) {
 		await vscode.commands.executeCommand("workbench.action.navigateBack");
+	} else {
+		textEditor.selections = [new vscode.Selection(foldLineIdx, 0, foldLineIdx, 0)];
+		await timeout(delayBetweenCommands);
+	}
+	if (Math.abs(foldLineIdx - origLineIdx) >= 10) {
+		await vscode.commands.executeCommand("workbench.action.navigateBack");
+	} else {
+		textEditor.selections = [new vscode.Selection(origLineIdx, 0, origLineIdx, 0)];
+		await timeout(delayBetweenCommands);
 	}
 }
 
