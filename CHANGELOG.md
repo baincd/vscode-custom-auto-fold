@@ -4,9 +4,15 @@ All notable changes to the "custom-auto-fold" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.1.0] - 2021-03-26
+### Fixed
+- Improved implementation to remove auto-fold cursor moves from Go Back navigation history
+- Do not check lines of just folded regions
+- Refactored code to reduce duplication and improve readability
+
 ## [1.0.3] - 2021-03-26
 ### Fixed
-- Fix navigation history
+- Fix navigation history when file is auto-folded
 
 ## [1.0.2] - 2021-03-21
 ### Fixed
