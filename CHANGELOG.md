@@ -4,6 +4,10 @@ All notable changes to the "custom-auto-fold" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.1.1] - 2022-08-20
+### Fixed
+- Do not stop folding on lines that match pattern but are unfoldable ([#1](https://github.com/baincd/vscode-custom-auto-fold/issues/1))
+
 ## [1.1.0] - 2021-03-26
 ### Fixed
 - Improved implementation to remove auto-fold cursor moves from Go Back navigation history
