@@ -106,16 +106,20 @@ class AutoFoldCommand {
 		await this.gotoLine(lineIdx);
 		await vscode.commands.executeCommand("editor.fold");
 
+		let didFold = false;
 		let foldRangeStartIdx = this.textEditor.selection.start.line;
-		let nextVisRangeStartIdx = this.textEditor.document.lineCount;
-		for (let i = 0; i < this.textEditor.visibleRanges.length; i++) {
-			let visRangeStartIdx = this.textEditor.visibleRanges[i].start.line;
-			if (foldRangeStartIdx < visRangeStartIdx && visRangeStartIdx < nextVisRangeStartIdx) {
-				nextVisRangeStartIdx = visRangeStartIdx;
-			}
-		}
+		let visRangeStartIdxAfterFold = this.textEditor.document.lineCount;
 
-		return new vscode.Range(foldRangeStartIdx,0,nextVisRangeStartIdx-1,0);
+		this.textEditor.visibleRanges.forEach(r => {
+			if (r.end.line === foldRangeStartIdx) {
+				didFold = true;
+			} else if (foldRangeStartIdx < r.start.line && r.start.line < visRangeStartIdxAfterFold) {
+				visRangeStartIdxAfterFold = r.start.line;
+			}
+		});
+
+		let foldedRangeEndIdx = (didFold ? visRangeStartIdxAfterFold-1 : foldRangeStartIdx);
+		return new vscode.Range(foldRangeStartIdx,0,foldedRangeEndIdx-1,0);
 	}
 
 	private async gotoLine(lineIdx: number) {
